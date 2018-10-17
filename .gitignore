@@ -44,3 +44,6 @@ tmtagsHistory
 *.sublime-project
 *.sublime-workspace
 .bundle
+./celebA.hdf5
+./.git/objects/pack/pack-6036f3865973a8cf39f26914ffcc6c471a94bc7b.pack
+./datasets/files/celebA.hdf5
