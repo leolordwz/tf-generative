@@ -85,7 +85,10 @@ def main():
         lines = [l.strip() for l in lines]
         num_images = int(lines[0])
 
+        # '\s' to match any whitespace character, '+': to match 1 or more repetitions,
         label_names = re.split('\s+', lines[1])
+        # dtype=object: The memory taken by the array is filled with pointers to Python objects
+        # which are being stored elsewhere in memory
         label_names = np.array(label_names, dtype=object)
         num_labels = len(label_names)
 
@@ -100,17 +103,21 @@ def main():
     with zipfile.ZipFile(image_file, 'r', zipfile.ZIP_DEFLATED) as zf:
         image_files = [f for f in zf.namelist()]
         image_files = sorted(image_files)
+        # keep only jpg files
         image_files = list(filter(lambda f: f.endswith('.jpg'), image_files))
 
         num_images = len(image_files)
         print('%d images' % (num_images))
 
         image_data = np.ndarray((num_images, 64, 64, 3), dtype='uint8')
-        for i, f in enumerate(image_files):
+        for i, f in enumerate(image_files): # i: index, f: value
+            # crop: (x1, y1, x2, y2)
             image = Image.open(zf.open(f, 'r')).resize((64, 78), Image.ANTIALIAS).crop((0, 7, 64, 64 + 7))
             image = np.asarray(image, dtype='uint8')
             image_data[i] = image
-            print('%d / %d' % (i + 1, num_images), end='\r', flush=True)
+            # \r moves the cursor to the beginning of the line
+            print('\r%d / %d' % (i + 1, num_images), end='')
+            # print('%d / %d' % (i + 1, num_images), end='\r', flush=True) # not working as expected
 
     # Create HDF5 file
     h5 = h5py.File(outfile, 'w')

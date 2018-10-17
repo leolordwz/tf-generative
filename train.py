@@ -1,11 +1,12 @@
 import os
 import argparse
 
+# set log level: "3" means only errors showed
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg')  # Not show windows when plotting
 
 import tensorflow as tf
 
