@@ -121,7 +121,7 @@ def main():
 
     # Create HDF5 file
     h5 = h5py.File(outfile, 'w')
-    string_dt = h5py.special_dtype(vlen=str)
+    string_dt = h5py.special_dtype(vlen=str) # Create a NumPy dtype object containing type hints
     dset = h5.create_dataset('images', data=image_data, dtype='uint8')
     dset = h5.create_dataset('attr_names', data=label_names, dtype=string_dt)
     dset = h5.create_dataset('attrs', data=labels, dtype='uint8')
@@ -133,5 +133,7 @@ def main():
     os.remove(image_file)
     os.remove(attr_file)
 
+# Running the module: __name__ == '__main__'
+# import the module: __name__ == the module's name
 if __name__ == '__main__':
     main()

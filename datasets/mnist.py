@@ -18,7 +18,7 @@ y_test_file = 't10k-labels-idx1-ubyte.gz'
 curdir = os.path.abspath(os.path.dirname(__file__))
 outdir = os.path.join(curdir, 'files', 'mnist')
 
-CHUNK_SIZE = 32768
+CHUNK_SIZE = 32768 # 2^15
 
 def download_mnist():
     if not os.path.exists(outdir):
@@ -28,9 +28,12 @@ def download_mnist():
     files = [x_train_file, y_train_file, x_test_file, y_test_file]
     for f in files:
         session = requests.Session()
+        # stream=True: only the response headers have been downloaded and
+        # the connection remains open, hence allowing us to make content retrieval conditional
+        # for response.iter_content
         response = session.get(os.path.join(url, f), stream=True)
         print('Downloading: %s' % (os.path.join(url, f)))
-        with open(os.path.join(outdir, f), 'wb') as fp:
+        with open(os.path.join(outdir, f), 'wb') as fp: # wb: writing in a binary mode
             dl = 0
             for chunk in response.iter_content(CHUNK_SIZE):
                 if chunk:
@@ -47,7 +50,7 @@ def download_mnist():
 def load_images(filename):
     with gzip.GzipFile(filename, 'rb') as fp:
         # Magic number
-        magic = struct.unpack('>I', fp.read(4))[0]
+        magic = struct.unpack('>I', fp.read(4))[0]  # '>': big-endian 'I': unsigned int
 
         # item sizes
         n, rows, cols = struct.unpack('>III', fp.read(4 * 3))
@@ -55,7 +58,7 @@ def load_images(filename):
         # Load items
         data = np.ndarray((n, rows, cols), dtype=np.uint8)
         for i in range(n):
-            sub = struct.unpack('B' * rows * cols, fp.read(rows * cols))
+            sub = struct.unpack('B' * rows * cols, fp.read(rows * cols)) # 'B': unsigned char
             data[i] = np.asarray(sub).reshape((rows, cols))
 
         return data
@@ -83,7 +86,9 @@ def load_data():
     x_train = load_images(os.path.join(outdir, x_train_file))
     y_train = load_labels(os.path.join(outdir, y_train_file))
 
+    # Padding 0s at the beginning and end of one dimension: 28x28-> (2+28+2)x(2+28+2)
     x_train = np.pad(x_train, ((0, 0), (2, 2), (2, 2)), 'constant', constant_values=0)
+    # np.newaxis add new axis with dim = 1
     x_train = (x_train[:, :, :, np.newaxis] / 255.0).astype('float32')
     y_train = y_train.astype('float32')
 

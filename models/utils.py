@@ -18,6 +18,7 @@ def binary_accuracy(y_true, y_pred):
 def sample_normal(avg, log_var):
     with tf.name_scope('SampleNormal'):
         epsilon = tf.random_normal(tf.shape(avg))
+        # exp(0.5*log_var) or exp(log_var)
         return tf.add(avg, tf.multiply(tf.exp(0.5 * log_var), epsilon))
 
 def vgg_conv_unit(x, filters, layers, training=True):

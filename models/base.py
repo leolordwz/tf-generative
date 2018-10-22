@@ -45,7 +45,7 @@ class BaseModel(metaclass=ABCMeta):
 
         self.resume = kwargs['resume']
 
-        self.sess = tf.Session()
+        self.sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
         self.writer = None
         self.saver = None
         self.summary = None
@@ -275,7 +275,10 @@ class CondBaseModel(BaseModel):
         _, height, width, dims = imgs.shape
 
         margin = min(width, height) // 10
-        figure = np.ones(((margin + height) * self.test_size + margin, (margin + width) * self.num_attrs + margin, dims), np.float32)
+        if self.name == 'mnist':
+            figure = np.ones(((margin + height) * self.test_size + margin, (margin + width) * self.num_attrs + margin), np.float32)
+        else:
+            figure = np.ones(((margin + height) * self.test_size + margin, (margin + width) * self.num_attrs + margin, dims), np.float32)
 
         for i in range(self.test_size * self.num_attrs):
             row = i // self.num_attrs
@@ -283,7 +286,11 @@ class CondBaseModel(BaseModel):
 
             y = margin + (margin + height) * row
             x = margin + (margin + width) * col
-            figure[y:y+height, x:x+width, :] = imgs[i, :, :, :]
+
+            if self.name == 'mnist':
+                figure[y:y + height, x:x + width] = imgs[i, :, :, 0]
+            else:
+                figure[y:y + height, x:x + width, :] = imgs[i, :, :, :]
 
         figure = Image.fromarray((figure * 255.0).astype(np.uint8))
         figure.save(filename)

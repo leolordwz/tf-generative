@@ -1,7 +1,7 @@
 import h5py
 import numpy as np
 
-class Dataset(object):
+class Dataset(object): # base class for images
     def __init__(self):
         self.images = None
 
@@ -13,9 +13,9 @@ class Dataset(object):
 
     shape = property(_get_shape)
 
-class ConditionalDataset(Dataset):
+class ConditionalDataset(Dataset): # Inherited from base class with attributes
     def __init__(self):
-        super(ConditionalDataset, self).__init__()
+        super(ConditionalDataset, self).__init__() # = super().__init__()
         self.attrs = None
         self.attr_names = None
 

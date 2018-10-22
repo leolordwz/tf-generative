@@ -6,6 +6,8 @@ from .base import CondBaseModel
 from .utils import *
 
 class Encoder(object):
+    # __init__: used when the class is called to initialize the instance
+    # __call__: method is called when the instance is called
     def __init__(self, input_shape, z_dims, num_attrs):
         self.variables = None
         self.reuse = False
@@ -20,6 +22,7 @@ class Encoder(object):
                 a = tf.reshape(attrs, [-1, 1, 1, self.num_attrs])
                 a = tf.tile(a, [1, self.input_shape[0], self.input_shape[1], 1])
                 x = tf.concat([inputs, a], axis=-1)
+                # 'same' ensure the padded length fits stride and filter sizes
                 x = tf.layers.conv2d(x, 64, (5, 5), (2, 2), 'same')
                 x = tf.layers.batch_normalization(x, training=training)
                 x = tf.nn.relu(x)
@@ -189,7 +192,7 @@ class CVAEGAN(CondBaseModel):
         self.z_dims = z_dims
 
         # Parameters for feature matching
-        self.use_feature_match = False
+        self.use_feature_match = True
         self.alpha = 0.7
 
         self.E_f_D_r = None
@@ -219,6 +222,11 @@ class CVAEGAN(CondBaseModel):
         self.dis_loss = None
         self.gen_acc = None
         self.dis_acc = None
+
+        self.lambda_KL = 3
+        self.lambda_G = 1
+        self.lambda_GD = 10**(-3)
+        self.lambda_GC = 10**(-3)
 
         self.build_model()
 
@@ -316,8 +324,9 @@ class CVAEGAN(CondBaseModel):
             with tf.name_scope('L_C'):
                 L_C = tf.losses.softmax_cross_entropy(self.c_r, c_r_pred)
 
-            self.enc_trainer = enc_opt.minimize(L_G + L_KL, var_list=self.f_enc.variables)
-            self.gen_trainer = gen_opt.minimize(L_G + L_GD + L_GC, var_list=self.f_gen.variables)
+            self.enc_trainer = enc_opt.minimize(self.lambda_G * L_G + self.lambda_KL * L_KL, var_list=self.f_enc.variables)
+            self.gen_trainer = gen_opt.minimize(self.lambda_G * L_G + self.lambda_GD * L_GD +
+                                                self.lambda_GC * L_GC, var_list=self.f_gen.variables)
             self.cls_trainer = cls_opt.minimize(L_C, var_list=self.f_cls.variables)
             self.dis_trainer = dis_opt.minimize(L_D, var_list=self.f_dis.variables)
 
